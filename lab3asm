@@ -1,0 +1,64 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <conio.h>
+
+int main()
+{
+    int a, c, d, e;
+    int b[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    int y[30]; // В одном массиве будут содержаться тройки значений “функция – аргумент – порядковый номер”
+
+    printf("Calculation Section. ((a + b - c) / d * e)\n");
+    printf("Enter variable a value: ");
+    scanf_s("%d", &a);
+    printf("Enter variable c value: ");
+    scanf_s("%d", &c);
+    printf("Enter variable d value: ");
+    scanf_s("%d", &d);
+    printf("Enter variable e value: ");
+    scanf_s("%d", &e);
+
+    // 2 вариант, e - изменяемая переменная
+    // 2 вариант: y=(a+b-c)/d*e
+    __asm {
+        // Счетчик цикла, а также индекс используемой переменной
+        mov ebx, 0
+        mov ecx, 0 // Индекс записи тройки значений в массив результатов
+        mov edx, 0 // Сделано, потому как div делит пару edx:eax, а не только eax
+
+        cycle:
+        // Проверка цикла
+        cmp ebx, 10
+            je end_cycle
+
+            // Вычисления
+            mov eax, a // a
+            mov esi, dword ptr b[ebx * 4] // Запись аргумента под номером, содержащимся в ebx, в edx
+            add eax, esi // a + b
+            sub eax, c // a + b - c
+            idiv d // (a + b - c) / d
+            imul eax, e // (a + b - c) / d * e
+            cdq
+
+            // Запись результатов вычислений в массив
+            mov y[ecx * 4], eax // Запись полученного результата функции
+            add ecx, 1
+            mov y[ecx * 4], esi // Запись аргумента
+            add ecx, 1
+            mov y[ecx * 4], ebx // Запись индекса аргумента
+            add ecx, 1
+
+            // Прирост счетчика цикла
+            add ebx, 1
+            jmp cycle
+
+            end_cycle :
+
+    }
+
+    printf("Calculation Results:\n");
+    for (int i = 0; i < 10; i++) {
+        printf("Function Result: %d\tArgue Value: %d\tArgue Index: %d\n", y[i * 3], y[i * 3 + 1], y[i * 3 + 2]);
+    }
+}
